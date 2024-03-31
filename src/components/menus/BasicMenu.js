@@ -1,42 +1,37 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Container, Nav, Navbar } from "react-bootstrap";
+import "./BasicMenu.css";
+import { Link, useNavigate } from "react-router-dom";
 
 const BasicMenu = () => {
     const [loginState, useLoginState] = useState({ isLogin: true });
+    const navigate = useNavigate();
 
     return (
-        <nav id="navbar" className="flex bg-blue-50 justify-end">
-            <div className="w-4/5 bg-gray-500 ">
-                <div className="flex p-6 text-white font-bold">
-                    <span className="pr-6 text-2xl">Shiba Auction</span>
-                </div>
-            </div>
-            {!loginState.isLogin ? (
-                <div className="w-1/5 flex justify-end bg-orange-300 p-4 font-medium">
-                    <div className="text-white text-sm m-1 rounded">
-                        <Link to={""}>로그인</Link>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    <div className="w-1/5 bg-blue-300 p-4 font-medium">
-                        <div className="w-full text-center text-white text-sm m-1 rounded font-bold">
-                            <Link to={""}>인벤토리</Link>
-                        </div>
-                    </div>
-                    <div className="w-1/5 bg-green-300 p-4 font-medium">
-                        <div className="w-full text-center text-white text-sm m-1 rounded font-bold">
-                            <Link to={""}>내 경매</Link>
-                        </div>
-                    </div>
-                    <div className="w-1/5 bg-pink-300 p-4 font-medium">
-                        <div className="w-full text-center text-white text-sm m-1 rounded font-bold">
-                            <Link to={""}>경매 쿠폰 구매</Link>
-                        </div>
-                    </div>
-                </>
-            )}
-        </nav>
+        <Navbar bg="dark" expand="lg" className="mb-4">
+            <Container>
+                <Navbar.Brand
+                    href="#home"
+                    className="fw-bold text-primary"
+                    onClick={() => navigate({ pathname: "/" })}
+                >
+                    SHIBA AUCTION
+                </Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="ms-auto custom-nav">
+                        <Nav.Link href="/member/inventory">인벤토리</Nav.Link>
+                        <Nav.Link href="#my-auctions">내 경매</Nav.Link>
+                        <Nav.Link
+                            href="#buy-coupons"
+                            onClick={() => navigate({ pathname: "/coupon" })}
+                        >
+                            경매 쿠폰 구매
+                        </Nav.Link>
+                    </Nav>
+                </Navbar.Collapse>
+            </Container>
+        </Navbar>
     );
 };
 

@@ -1,0 +1,9 @@
+.custom-nav .nav-link {
+    color: white; /* 기본 글자 색상을 하얀색으로 설정 */
+    font-weight: bold;
+    padding: 0.5rem 1rem; /* 패딩 설정 */
+}
+
+.custom-nav .nav-link:hover {
+    color: #ccc; /* 마우스 오버 시 글자 색상을 회색으로 변경 */
+}
