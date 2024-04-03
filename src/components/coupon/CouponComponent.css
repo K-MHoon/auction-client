@@ -1,0 +1,34 @@
+.count {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+.count span {
+    font-size: 30px;
+    font-weight: bold;
+    color: white;
+}
+
+.price {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.price span {
+    font-size: 30px;
+    font-weight: bold;
+    color: white;
+}
+
+.coupon {
+    border-style: hidden !important;
+    background-color: #ffd700 !important;
+    border-radius: 30px;
+    transition: background-color 0.5s ease;
+}
+
+.coupon:hover {
+    background-color: #b8860b !important;
+}
