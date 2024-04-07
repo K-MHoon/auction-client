@@ -89,7 +89,7 @@ const InventoryComponent = () => {
                     </Col>
                 ))}
             </Row>
-            <Row className="p-5 text-center">
+            <Row className="m-5 p-5 text-center border rounded-4 border-5 border-primary">
                 <Col md="auto" style={{ fontSize: "30px", fontWeight: "bold" }}>
                     내 보유 금액
                 </Col>
