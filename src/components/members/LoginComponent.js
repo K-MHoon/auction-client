@@ -1,7 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
+import useCustomLogin from "../../hooks/useCustomLogin";
+
+const initState = {
+    email: "",
+    pw: "",
+};
 
 const LoginComponent = () => {
+    const [loginParam, setLoginParam] = useState({ ...initState });
+
+    const { doLogin, moveToPath } = useCustomLogin();
+
+    const handleChange = (e) => {
+        loginParam[e.target.name] = e.target.value;
+        setLoginParam({ ...loginParam });
+    };
+
+    const handleClickLogin = (e) => {
+        doLogin(loginParam).then((data) => {
+            console.log(data);
+
+            if (data.error) {
+                alert("이메일 또는 비밀번호를 다시 확인하세요");
+            } else {
+                alert("로그인 성공");
+                moveToPath("/", true);
+            }
+        });
+    };
+
     return (
         <Container
             md="auto"
@@ -10,7 +38,7 @@ const LoginComponent = () => {
                 alignContent: "center",
                 display: "flex",
                 width: "800px",
-                height: "200px",
+                height: "250px",
             }}
         >
             <Row
@@ -20,7 +48,8 @@ const LoginComponent = () => {
                     alignContent: "center",
                     padding: "50px",
                     borderRadius: "35px",
-                    boxShadow: "0 45px 63px rgba(0, 0, 0, 0.7)",
+                    // border: "10px solid white",
+                    backgroundColor: "rgba(22, 10, 10, 0.7)",
                 }}
             >
                 <Col>
@@ -39,6 +68,9 @@ const LoginComponent = () => {
                         <Col md={8}>
                             <Form.Control
                                 type="email"
+                                name="email"
+                                value={loginParam.email}
+                                onChange={handleChange}
                                 placeholder="Enter email"
                             />
                         </Col>
@@ -59,6 +91,9 @@ const LoginComponent = () => {
                         <Col md={8}>
                             <Form.Control
                                 type="password"
+                                name="pw"
+                                value={loginParam.pw}
+                                onChange={handleChange}
                                 placeholder="Password"
                             />
                         </Col>
@@ -68,8 +103,8 @@ const LoginComponent = () => {
                     <Button
                         variant="primary"
                         size="lg"
-                        block
                         style={{ height: "100%" }}
+                        onClick={handleClickLogin}
                     >
                         로그인
                     </Button>
@@ -78,8 +113,8 @@ const LoginComponent = () => {
                     <Button
                         variant="secondary"
                         size="lg"
-                        block
                         style={{ height: "100%" }}
+                        onClick={() => moveToPath("/member/register", false)}
                     >
                         회원가입
                     </Button>
