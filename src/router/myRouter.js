@@ -2,27 +2,28 @@ import React, { Suspense, lazy } from "react";
 import inventoryRouter from "./inventoryRouter";
 
 const Loading = <div>Loading....</div>;
-const Login = lazy(() => import("../pages/member/LoginPage"));
-const Register = lazy(() => import("../pages/member/RegisterPage"));
+const AuctionList = lazy(() => import("../pages/my/auction/AuctionListPage"));
+const Inventory = lazy(() => import("../pages/my/inventory/InventoryPage"));
 
-const memberRouter = () => {
+const myRouter = () => {
     return [
         {
-            path: "login",
+            path: "auction/list",
             element: (
                 <Suspense fallback={Loading}>
-                    <Login />
+                    <AuctionList />
                 </Suspense>
             ),
         },
         {
-            path: "register",
+            path: "inventory",
             element: (
                 <Suspense fallback={Loading}>
-                    <Register />
+                    <Inventory />
                 </Suspense>
             ),
+            children: inventoryRouter(),
         },
     ];
 };
-export default memberRouter;
+export default myRouter;
