@@ -1,5 +1,6 @@
 import React from "react";
-import { Card, Col, Form, Row } from "react-bootstrap";
+import { Card, Col, Form, Row, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 const items = [
     {
@@ -66,9 +67,11 @@ const items = [
 ];
 
 const InventoryComponent = () => {
+    const navigate = useNavigate();
+
     return (
         <>
-            <Row>
+            <Row className="border rounded-5 border-5 p-3 border-primary">
                 {items.map((item, index) => (
                     <Col
                         key={item.id}
@@ -88,6 +91,22 @@ const InventoryComponent = () => {
                         </Card>
                     </Col>
                 ))}
+            </Row>
+            <Row className="mt-5 justify-content-md-end">
+                <Col md="auto" className="p-3">
+                    <Button variant="outline-warning" size="lg">
+                        물품 내리기
+                    </Button>
+                </Col>
+                <Col md="auto" className="p-3">
+                    <Button
+                        variant="outline-primary"
+                        size="lg"
+                        onClick={() => navigate({ pathname: "add" })}
+                    >
+                        신규 물품 등록하기
+                    </Button>
+                </Col>
             </Row>
             <Row className="m-5 p-5 text-center border rounded-4 border-5 border-primary">
                 <Col md="auto" style={{ fontSize: "30px", fontWeight: "bold" }}>
