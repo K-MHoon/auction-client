@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { Button, Col, Modal, Row } from "react-bootstrap";
 import shiba from "../../images/shiba_coupon.png";
 import "./CouponComponent.css";
+import { couponBuy } from "../../api/couponApi";
+import { useNavigate } from "react-router-dom";
+import useCustomLogin from "../../hooks/useCustomLogin";
+import useCustomInventory from "../../hooks/useCustomInventory";
 
 const items = [
     {
@@ -27,10 +31,29 @@ const items = [
 ];
 
 const CouponComponent = () => {
+    const navigate = useNavigate();
+    const { doLogout } = useCustomLogin();
+    const { inventory } = useCustomInventory();
     const [show, setShow] = useState(false);
     const [modalContent, setModalContent] = useState({});
 
-    const handleClose = () => setShow(false);
+    const handleClose = () => {
+        couponBuy(modalContent)
+            .then((data) => {
+                alert("구매에 성공했습니다");
+            })
+            .catch((err) => {
+                alert(
+                    `[${err.response.data.code}] ${err.response.data.message}`
+                );
+                if (err.response.data.code === "S003") {
+                    doLogout();
+                    navigate({ pathname: "/member/login" }, { replace: true });
+                }
+            });
+        setShow(false);
+    };
+
     const handleShow = (content) => {
         setModalContent(content);
         setShow(true);
@@ -40,7 +63,9 @@ const CouponComponent = () => {
         <>
             <Row className="justify-content-md-end">
                 <Col md="auto">
-                    <h5 style={{ fontWeight: "bold" }}>내 보유 쿠폰 수 : 0</h5>
+                    <h5 style={{ fontWeight: "bold" }}>
+                        내 보유 쿠폰 수 : {inventory.couponList.length}
+                    </h5>
                 </Col>
             </Row>
             {items.map((item) => (
