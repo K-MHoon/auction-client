@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Col, Form, Row, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import useCustomInventory from "./../../../hooks/useCustomInventory";
+import { API_SERVER_HOST } from "../../../api/info";
+import FetchingModal from "../../common/FetchingModal";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { itemDelete } from "../../../api/itemApi";
+import ResultModal from "../../common/ResultModal";
 
 const items = [
     {
@@ -66,35 +73,136 @@ const items = [
     // 더 많은 아이템을 추가할 수 있습니다.
 ];
 
+const host = API_SERVER_HOST;
+
+const initialPopup = {
+    title: "",
+    content: "",
+    callbackFn: () => {},
+};
 const InventoryComponent = () => {
+    const [selectedItemArray, setSelectedItemArray] = useState([]);
+    const [popup, setPopup] = useState(initialPopup);
+    const [show, setShow] = useState(false);
+    const { inventory, query } = useCustomInventory();
+
+    const handleSelected = (e) => {
+        if (e.target.checked) {
+            setSelectedItemArray([
+                ...selectedItemArray,
+                Number.parseInt(e.target.id),
+            ]);
+        } else {
+            setSelectedItemArray(
+                selectedItemArray.filter(
+                    (i) => i !== Number.parseInt(e.target.id)
+                )
+            );
+        }
+    };
+
+    const deleteMutation = useMutation({
+        mutationFn: (item) => itemDelete(item),
+    });
+
+    const deleteSelectedItemArray = () => {
+        deleteMutation.mutate(selectedItemArray);
+    };
+
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        if (deleteMutation.isSuccess) {
+            queryClient.invalidateQueries(["inventory"]);
+            setPopup({
+                title: "처리 성공",
+                content: "정상적으로 처리되었습니다.",
+                callbackFn: () => setShow(false),
+            });
+            setShow(true);
+        }
+        if (deleteMutation.isError) {
+            setPopup({
+                title: "처리 실패",
+                content: "처리에 실패했습니다.",
+                callbackFn: () => setShow(false),
+            });
+            setShow(true);
+        }
+    }, [deleteMutation.isSuccess, deleteMutation.isError]);
+
+    console.log(selectedItemArray);
+
     const navigate = useNavigate();
 
     return (
         <>
+            <FetchingModal
+                flag={query.isFetching || deleteMutation.isPending}
+            />
+            <ResultModal
+                flag={show}
+                title={popup.title}
+                content={popup.content}
+                callbackFn={popup.callbackFn}
+            />
             <Row className="border rounded-5 border-5 p-3 border-primary">
-                {items.map((item, index) => (
-                    <Col
-                        key={item.id}
-                        xs={12}
-                        sm={6}
-                        md={4}
-                        lg={3}
-                        xl={2}
-                        className="p-2"
+                {inventory.itemList.map((item, index) => (
+                    <div
+                        style={{
+                            width: 230,
+                            backgroundColor: "#facc6b",
+                            backgroundImage:
+                                "linear-gradient(315deg, #facc6b 0%, #fabc3c 74%)",
+                            margin: 10,
+                            padding: 10,
+                            borderRadius: 20,
+                        }}
+                        key={item.sequence}
                     >
-                        <Card>
-                            <Card.Img variant="top" src={item.imageUrl} />
-                            <Card.Body>
-                                <Card.Title>아이템 {index + 1}</Card.Title>
-                                <Card.Text>{item.price}</Card.Text>
-                            </Card.Body>
-                        </Card>
-                    </Col>
+                        <Form.Check
+                            style={{ marginLeft: 8 }}
+                            id={item.sequence}
+                            onClick={handleSelected}
+                        />
+                        <Col
+                            className="p-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                                navigate({ pathname: `item/${item.sequence}` })
+                            }
+                        >
+                            <Card>
+                                <Card.Img
+                                    variant="top"
+                                    src={`${host}/api/view/item/s_${
+                                        item.itemImageList &&
+                                        item.itemImageList[0]
+                                            ? item.itemImageList[0].fileName
+                                            : "default"
+                                    }`}
+                                    width="150px"
+                                    height="150px"
+                                />
+                                <Card.Body>
+                                    <Card.Title>{item.name}</Card.Title>
+                                    <Card.Text>
+                                        <span>{item.type}</span>
+                                        <br />₩ {item.price ? item.price : 0}
+                                    </Card.Text>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </div>
                 ))}
             </Row>
             <Row className="mt-5 justify-content-md-end">
                 <Col md="auto" className="p-3">
-                    <Button variant="outline-warning" size="lg">
+                    <Button
+                        variant="outline-warning"
+                        size="lg"
+                        onClick={deleteSelectedItemArray}
+                    >
                         물품 내리기
                     </Button>
                 </Col>
@@ -115,7 +223,10 @@ const InventoryComponent = () => {
                 <Col>
                     <Form.Control
                         type="text"
-                        placeholder="₩ 2,000,000"
+                        value={Intl.NumberFormat("ko-KR", {
+                            style: "currency",
+                            currency: "KRW",
+                        }).format(inventory.money)}
                         readOnly
                         style={{ fontSize: "20px", fontWeight: "bold" }}
                     />
