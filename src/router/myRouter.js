@@ -3,7 +3,6 @@ import inventoryRouter from "./inventoryRouter";
 
 const Loading = <div>Loading....</div>;
 const AuctionList = lazy(() => import("../pages/my/auction/AuctionListPage"));
-const Inventory = lazy(() => import("../pages/my/inventory/InventoryPage"));
 
 const myRouter = () => {
     return [
@@ -17,11 +16,6 @@ const myRouter = () => {
         },
         {
             path: "inventory",
-            element: (
-                <Suspense fallback={Loading}>
-                    <Inventory />
-                </Suspense>
-            ),
             children: inventoryRouter(),
         },
     ];
