@@ -34,3 +34,10 @@ export const fileGet = async (fileName) => {
     );
     return res.data;
 };
+
+export const itemHistoryGet = async (seq, page, size) => {
+    const res = await jwtAxios.get(
+        `${host}/item/${seq}/history?page=${page}&size=${size}`
+    );
+    return res.data;
+};
