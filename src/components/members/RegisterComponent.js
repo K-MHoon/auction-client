@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { registerPost } from "../../api/memberApi";
 
 const initState = {
     email: "",
@@ -8,6 +10,7 @@ const initState = {
 };
 
 const RegisterComponent = () => {
+    const navigate = useNavigate();
     const [registerForm, setRegisterForm] = useState(initState);
 
     const handleChange = (e) => {
@@ -15,9 +18,18 @@ const RegisterComponent = () => {
         setRegisterForm({ ...registerForm });
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log(registerForm);
+        await registerPost(registerForm).then((data) => {
+            console.log(data);
+
+            if (data.error) {
+                alert("회원가입에 실패했습니다.");
+            } else {
+                alert("회원가입에 성공했습니다.");
+                navigate({ pathname: "/member/login" }, { replace: false });
+            }
+        });
     };
 
     return (
