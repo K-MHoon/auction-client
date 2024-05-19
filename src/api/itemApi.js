@@ -41,3 +41,10 @@ export const itemHistoryGet = async (seq, page, size) => {
     );
     return res.data;
 };
+
+export const itemHistoryDetailGet = async (itemSeq, auctionSeq) => {
+    const res = await jwtAxios.get(
+        `${host}/item/${itemSeq}/history/auction/${auctionSeq}`
+    );
+    return res.data;
+};
