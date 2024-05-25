@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import BasicLayout from "../layouts/BasicLayout";
 import SearchBar from "../components/menus/SearchBar";
-import { Button, Container, Row, Col } from "react-bootstrap";
+import { Button, Row, Col } from "react-bootstrap";
 import AuctionSlider from "../components/menus/AuctionSlider";
+import useCustomLogin from "../hooks/useCustomLogin";
 
 const MainPage = () => {
+    const { isLogin, moveToLoginReturn } = useCustomLogin();
+
+    if (!isLogin) {
+        return moveToLoginReturn();
+    }
+
     return (
         <BasicLayout>
             <SearchBar />
