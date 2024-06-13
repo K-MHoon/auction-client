@@ -4,3 +4,11 @@
     align-items: center; /* Center vertically */
     height: 100%; /* Make sure the div takes full height of the slide */
 }
+
+.slick-list {
+    margin-right: -20px;
+}
+
+.slick-slide {
+    padding-right: 20px;
+}

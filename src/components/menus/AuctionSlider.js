@@ -1,45 +1,41 @@
 import React, { useState } from "react";
 import Slider from "react-slick";
 import "./AuctionSlider.css";
+import { useQuery } from "@tanstack/react-query";
+import { auctionListGet } from "../../api/auctionApi";
+import FetchingModal from "../common/FetchingModal";
+import { Card, FormControl, Row, Stack } from "react-bootstrap";
+import { API_SERVER_HOST } from "../../api/info";
+
+const initState = {
+    sequence: 0,
+    title: "",
+    minPrice: "",
+    price: "",
+    auctionImageList: [{ fileName: "" }],
+    seller: "",
+    startTime: "",
+};
 
 const AuctionSlider = () => {
-    const [auctions, setAuctions] = useState([
-        {
-            id: 1,
-            title: "경매1",
-            description: "설명1",
-            image: "https://via.placeholder.com/150",
-        },
-        {
-            id: 2,
-            title: "경매2",
-            description: "설명2",
-            image: "https://via.placeholder.com/150",
-        },
-        {
-            id: 3,
-            title: "경매3",
-            description: "설명3",
-            image: "https://via.placeholder.com/150",
-        },
-        {
-            id: 4,
-            title: "경매4",
-            description: "설명4",
-            image: "https://via.placeholder.com/150",
-        },
-    ]);
+    const query = useQuery({
+        queryKey: ["auctions"],
+        queryFn: () => auctionListGet(),
+        staleTime: 1000 * 10 * 60,
+        retry: 1,
+    });
+
+    const data = query.data || [initState];
 
     const settings = {
-        dots: false,
         infinite: true,
         speed: 500,
-        centerMode: false,
-        slidesToShow: 4,
-        slidesToScroll: 1,
         autoplay: true,
-        autoplaySpeed: 2000,
+        centerMode: true,
         cssEase: "linear",
+        autoplaySpeed: 2000,
+        variableWidth: true,
+
         responsive: [
             {
                 breakpoint: 1024,
@@ -61,15 +57,60 @@ const AuctionSlider = () => {
     };
 
     return (
-        <Slider {...settings}>
-            {auctions.map((auction) => (
-                <div key={auction.id}>
-                    <img src={auction.image} alt={auction.title} />
-                    <h3>{auction.title}</h3>
-                    <p>{auction.description}</p>
-                </div>
-            ))}
-        </Slider>
+        <>
+            <FetchingModal flag={query.isFetching} />
+            <Slider {...settings}>
+                {data.map((auction) => (
+                    <Card key={auction.sequence} style={{ width: "250px" }}>
+                        <Card.Img
+                            variant="top"
+                            src={`${API_SERVER_HOST}/api/view/item/s_${
+                                auction.auctionImageList[0]
+                                    ? auction.auctionImageList[0].fileName
+                                    : "default"
+                            }`}
+                        />
+                        <Card.Body>
+                            <Card.Title
+                                style={{
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                {auction.title}
+                            </Card.Title>
+                            <Card.Text>
+                                <Stack gap={2}>
+                                    <div style={{ textAlign: "right" }}>
+                                        {auction.seller.name}
+                                    </div>
+                                    <div
+                                        style={{
+                                            color: "blue",
+                                            fontWeight: "bold",
+                                            fontSize: "20px",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        (₩){auction.minPrice}
+                                    </div>
+                                    <div
+                                        style={{
+                                            color: "red",
+                                            fontWeight: "bold",
+                                            fontSize: "20px",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        (₩){auction.price ? auction.price : 0}
+                                    </div>
+                                </Stack>
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
+                ))}
+            </Slider>
+        </>
     );
 };
 
