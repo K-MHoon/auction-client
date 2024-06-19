@@ -11,7 +11,6 @@ const BasicMenu = () => {
         <Navbar bg="dark" expand="lg" className="mb-4">
             <Container>
                 <Navbar.Brand
-                    href="#home"
                     className="fw-bold text-primary"
                     onClick={() => navigate({ pathname: "/" })}
                 >
@@ -20,10 +19,21 @@ const BasicMenu = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto custom-nav">
-                        <Nav.Link href="/member/inventory">인벤토리</Nav.Link>
-                        <Nav.Link href="#my-auctions">내 경매</Nav.Link>
                         <Nav.Link
-                            href="#buy-coupons"
+                            onClick={() =>
+                                navigate({ pathname: "/my/inventory" })
+                            }
+                        >
+                            인벤토리
+                        </Nav.Link>
+                        <Nav.Link
+                            onClick={() =>
+                                navigate({ pathname: "/my/auction/list" })
+                            }
+                        >
+                            내 경매
+                        </Nav.Link>
+                        <Nav.Link
                             onClick={() => navigate({ pathname: "/coupon" })}
                         >
                             경매 쿠폰 구매
