@@ -15,9 +15,28 @@ export const auctionSliderListGet = async () => {
     return res.data;
 };
 
-export const auctionListGet = async (itemType, auctionTitle, page, size) => {
+export const auctionListGet = async (itemType, itemName, page, size) => {
+    const typeParam = itemType ? `item-type=${itemType}&` : ``;
+    const nameParam = itemName ? `item-name=${itemName}&` : ``;
+
     const res = await jwtAxios.get(
-        `${host}/auction?item-type=${itemType}&title=${auctionTitle}&page=${page}&size=${size}`
+        `${host}/auction?${typeParam}${nameParam}page=${page}&size=${size}`
+    );
+    return res.data;
+};
+
+export const myAuctionListGet = async (param, page, size) => {
+    const auctionStatusParam = param.auctionStatus
+        ? `auction-status=${param.auctionStatus}&`
+        : ``;
+    const auctionTypeParam = param.auctionType
+        ? `auction-type=${param.auctionType}&`
+        : ``;
+    const itemTypeParam = param.itemType ? `item-type=${param.itemType}&` : ``;
+    const itemNameParam = param.itemName ? `item-name=${param.itemName}&` : ``;
+
+    const res = await jwtAxios.get(
+        `${host}/auction/my?${itemTypeParam}${itemNameParam}${auctionTypeParam}${auctionStatusParam}page=${page}&size=${size}`
     );
     return res.data;
 };
