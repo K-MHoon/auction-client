@@ -89,7 +89,11 @@ const ListComponent = () => {
     };
 
     const handleItemTypeSelect = (eventKey) => {
-        setItemType(eventKey);
+        if (eventKey === "ALL") {
+            setItemType(null);
+        } else {
+            setItemType(eventKey);
+        }
     };
 
     const handleItemNameChange = (event) => {
@@ -103,7 +107,7 @@ const ListComponent = () => {
                     <InputGroup>
                         <DropdownButton
                             id="dropdown-auction-type"
-                            title={itemTypeList[itemType]}
+                            title={itemType ? itemTypeList[itemType] : "전체"}
                             onSelect={handleItemTypeSelect}
                         >
                             {Object.entries(itemTypeList).map(
@@ -116,9 +120,7 @@ const ListComponent = () => {
                         </DropdownButton>
                         <FormControl
                             placeholder={`${
-                                itemType === ""
-                                    ? "물품"
-                                    : itemTypeList[itemType]
+                                itemType ? itemTypeList[itemType] : "물품"
                             } 검색...`}
                             value={itemName}
                             onChange={handleItemNameChange}
