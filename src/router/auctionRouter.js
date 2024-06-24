@@ -8,7 +8,7 @@ const Process = lazy(() => import("../pages/auction/ProcessPage"));
 const auctionRouter = () => {
     return [
         {
-            path: "add",
+            path: "add/:ino",
             element: (
                 <Suspense fallback={Loading}>
                     <Add />

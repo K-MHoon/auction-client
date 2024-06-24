@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Modal, Pagination, Table } from "react-bootstrap";
 import { itemHistoryDetailGet, itemHistoryGet } from "../../../../api/itemApi";
-import HistoryDetailModal from "./HistoryDetailModal";
 import FormTextBox from "../../../common/FormTextBox";
 
 const initState = {

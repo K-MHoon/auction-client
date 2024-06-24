@@ -35,8 +35,8 @@ const useCustomLogin = () => {
         resetState();
     };
 
-    const moveToPath = (path) => {
-        navigate({ pathname: path }, { replace: true });
+    const moveToPath = (path, replace) => {
+        navigate({ pathname: path }, { replace: replace });
     };
 
     const moveToLogin = () => {
