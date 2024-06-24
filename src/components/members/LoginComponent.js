@@ -19,8 +19,6 @@ const LoginComponent = () => {
 
     const handleClickLogin = (e) => {
         doLogin(loginParam).then((data) => {
-            console.log(data);
-
             if (data.error) {
                 alert("이메일 또는 비밀번호를 다시 확인하세요");
             } else {

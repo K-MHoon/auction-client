@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { itemDelete } from "../../../api/itemApi";
 import ResultModal from "../../common/ResultModal";
+import { KRW } from "../../common/CommonFunc";
 
 const items = [
     {
@@ -223,10 +224,7 @@ const InventoryComponent = () => {
                 <Col>
                     <Form.Control
                         type="text"
-                        value={Intl.NumberFormat("ko-KR", {
-                            style: "currency",
-                            currency: "KRW",
-                        }).format(inventory.money)}
+                        value={KRW(inventory.money)}
                         readOnly
                         style={{ fontSize: "20px", fontWeight: "bold" }}
                     />

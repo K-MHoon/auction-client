@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import Slider from "react-slick";
 import "./AuctionSlider.css";
 import { useQuery } from "@tanstack/react-query";
-import { auctionListGet } from "../../api/auctionApi";
+import { auctionSliderListGet } from "../../api/auctionApi";
 import FetchingModal from "../common/FetchingModal";
-import { Card, FormControl, Row, Stack } from "react-bootstrap";
+import { Card, Stack } from "react-bootstrap";
 import { API_SERVER_HOST } from "../../api/info";
+import { KRW } from "../common/CommonFunc";
 
 const initState = {
     sequence: 0,
@@ -19,8 +20,8 @@ const initState = {
 
 const AuctionSlider = () => {
     const query = useQuery({
-        queryKey: ["auctions"],
-        queryFn: () => auctionListGet(),
+        queryKey: ["auctionSlider"],
+        queryFn: () => auctionSliderListGet(),
         staleTime: 1000 * 10 * 60,
         retry: 1,
     });
@@ -92,7 +93,7 @@ const AuctionSlider = () => {
                                             textAlign: "center",
                                         }}
                                     >
-                                        (₩){auction.minPrice}
+                                        {KRW(auction.minPrice)}
                                     </div>
                                     <div
                                         style={{
@@ -102,7 +103,7 @@ const AuctionSlider = () => {
                                             textAlign: "center",
                                         }}
                                     >
-                                        (₩){auction.price ? auction.price : 0}
+                                        {KRW(auction.price)}
                                     </div>
                                 </Stack>
                             </Card.Text>
