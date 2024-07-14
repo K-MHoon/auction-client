@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
-import { jwtHeader } from "../util/jwtUtil";
+import { getCookie } from "../util/cookieUtil";
 
 const SOCKET_URL = "ws://localhost:8080/api/user/ws";
 
@@ -12,29 +12,26 @@ const useCustomSocket = () => {
         console.log("연결이 종료되었습니다.");
     };
 
-    useEffect(() => {
-        const connect = () => {
-            client.current = new Client({
-                connectHeaders: {
-                    Authorization: jwtHeader,
-                },
-                brokerURL: SOCKET_URL,
-                onConnect: () => {
-                    console.log("연결 성공");
-                },
-                onStompError: (frame) => {
-                    console.error(frame);
-                },
-            });
-            client.current.activate();
-        };
+    const connect = (subscribeObj) => {
+        client.current = new Client({
+            connectHeaders: {
+                Authorization: `Bearer ${getCookie("member").accessToken}`,
+            },
+            brokerURL: SOCKET_URL,
+            onConnect: () => {
+                console.log("연결 성공");
+                subscribeObj.map((obj) => {
+                    client.current.subscribe(obj.key, obj.func);
+                });
+            },
+            onStompError: (frame) => {
+                console.error(frame);
+            },
+        });
+        client.current.activate();
+    };
 
-        connect();
-
-        return () => disconnect();
-    }, []);
-
-    return { client };
+    return { client, connect, disconnect };
 };
 
 export default useCustomSocket;

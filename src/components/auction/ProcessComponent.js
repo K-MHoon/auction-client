@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { auctionGet } from "../../api/auctionApi";
 import { API_SERVER_HOST } from "../../api/info";
 import FetchingModal from "../common/FetchingModal";
-import useCustomSocket from "../../hooks/useCustomSocket";
 import { KRW } from "./../common/CommonFunc";
+import useCustomSocket from "./../../hooks/useCustomSocket";
 
 const itemState = {
     sequence: 0,
@@ -35,7 +35,8 @@ const initState = {
 };
 
 const ProcessComponent = ({ pno }) => {
-    const { client } = useCustomSocket();
+    const { connect, disconnect } = useCustomSocket();
+    const [participant, setParticipant] = useState(0);
 
     const query = useQuery({
         queryKey: ["auction", pno],
@@ -43,6 +44,20 @@ const ProcessComponent = ({ pno }) => {
         staleTime: 1000 * 10 * 60,
         retry: 1,
     });
+
+    const participantFunc = {
+        key: `/sub/auction/${pno}/participant`,
+        func: (callback) => {
+            const jsonBody = JSON.parse(callback.body);
+            console.log(jsonBody);
+            setParticipant(jsonBody.count);
+        },
+    };
+
+    useEffect(() => {
+        connect([participantFunc]);
+        return () => disconnect();
+    }, []);
 
     const data = query.data || initState;
 
@@ -53,7 +68,7 @@ const ProcessComponent = ({ pno }) => {
                 className="fw-bold fs-3 position-absolute"
                 style={{ marginTop: "-30px" }}
             >
-                현재 참가자 수 : 8 / {data.maxParticipantCount}
+                현재 참가자 수 : {participant} / {data.maxParticipantCount}
             </Row>
             <Row
                 className="justify-content-md-end"
