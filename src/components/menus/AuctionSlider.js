@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import Slider from "react-slick";
 import "./AuctionSlider.css";
 import { useQuery } from "@tanstack/react-query";
@@ -7,8 +7,6 @@ import FetchingModal from "../common/FetchingModal";
 import { Card, Stack } from "react-bootstrap";
 import { API_SERVER_HOST } from "../../api/info";
 import { KRW } from "../common/CommonFunc";
-import { Client } from "@stomp/stompjs";
-import { jwtHeader } from "../../util/jwtUtil";
 
 const initState = {
     sequence: 0,
@@ -21,47 +19,12 @@ const initState = {
 };
 
 const AuctionSlider = () => {
-    const [data, setData] = useState([initState]);
-    const client = useRef({});
-
-    const disconnect = () => {
-        client.current.deactivate();
-        console.log("연결이 종료되었습니다.");
-    };
-
-    useEffect(() => {
-        const connect = () => {
-            client.current = new Client({
-                connectHeaders: {
-                    Authorization: jwtHeader,
-                },
-                brokerURL: "ws://localhost:8080/api/user/ws",
-                onConnect: () => {
-                    console.log("연결 성공");
-                },
-                onStompError: (frame) => {
-                    console.error(frame);
-                },
-            });
-            client.current.activate();
-        };
-
-        connect();
-
-        return () => disconnect();
-    }, []);
-
     const query = useQuery({
         queryKey: ["auctionSlider"],
         queryFn: () => auctionSliderListGet(),
         staleTime: 1000 * 10 * 60,
         retry: 1,
     });
-
-    useEffect(() => {
-        if (!query) return;
-        setData(query.data);
-    }, [query.isSuccess]);
 
     const settings = {
         infinite: true,
@@ -91,6 +54,8 @@ const AuctionSlider = () => {
             },
         ],
     };
+
+    const data = query.data || [initState];
 
     return (
         <>

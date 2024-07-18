@@ -10,6 +10,18 @@ export const auctionAdd = async (auction) => {
     return res.data;
 };
 
+export const auctionGet = async (pno) => {
+    const res = await jwtAxios.get(`${host}/auction/${pno}`);
+    return res.data;
+};
+
+export const auctionUpdatePrice = async (auctionSeq, price) => {
+    const res = await jwtAxios.post(`${host}/auction/${auctionSeq}/price`, {
+        price,
+    });
+    return res.data;
+};
+
 export const auctionSliderListGet = async () => {
     const res = await jwtAxios.get(`${host}/auction/slider`);
     return res.data;
