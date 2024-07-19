@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Col, Form, Row, Image } from "react-bootstrap";
 import FormTextBox from "../common/FormTextBox";
-import { useQuery } from "@tanstack/react-query";
-import { auctionGet } from "../../api/auctionApi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { auctionGet, auctionUpdatePrice } from "../../api/auctionApi";
 import { API_SERVER_HOST } from "../../api/info";
 import FetchingModal from "../common/FetchingModal";
 import { KRW } from "./../common/CommonFunc";
@@ -36,7 +36,9 @@ const initState = {
 
 const ProcessComponent = ({ pno }) => {
     const { connect, disconnect } = useCustomSocket();
+    const [price, setPrice] = useState(0);
     const [participant, setParticipant] = useState(0);
+    const [currentPrice, setCurrentPrice] = useState(0);
 
     const query = useQuery({
         queryKey: ["auction", pno],
@@ -54,12 +56,29 @@ const ProcessComponent = ({ pno }) => {
         },
     };
 
+    const updatePriceFunc = {
+        key: `/sub/auction/${pno}/price`,
+        func: (callback) => {
+            const jsonBody = JSON.parse(callback.body);
+            console.log(jsonBody);
+            setCurrentPrice(jsonBody.price);
+        },
+    };
+
     useEffect(() => {
-        connect([participantFunc]);
+        connect([participantFunc, updatePriceFunc]);
         return () => disconnect();
     }, []);
 
+    const updatePriceMutation = useMutation({
+        mutationFn: () => auctionUpdatePrice(pno, price),
+    });
+
     const data = query.data || initState;
+
+    useEffect(() => {
+        setCurrentPrice(data.price);
+    }, [data.price]);
 
     return (
         <>
@@ -239,7 +258,7 @@ const ProcessComponent = ({ pno }) => {
                         textAlign: "center",
                     }}
                 >
-                    <span>{KRW(data.price)}</span>
+                    <span>{KRW(currentPrice + data.priceUnit)}</span>
                 </Col>
                 <Col
                     style={{
@@ -249,7 +268,7 @@ const ProcessComponent = ({ pno }) => {
                         textAlign: "center",
                     }}
                 >
-                    <span>{KRW(data.minPrice)}</span>
+                    <span>{KRW(currentPrice)}</span>
                 </Col>
             </Row>
             <Row
@@ -262,10 +281,19 @@ const ProcessComponent = ({ pno }) => {
                 }}
             >
                 <Col md={6}>
-                    <Form.Control type="text" />
+                    <Form.Control
+                        type="text"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                    />
                 </Col>
                 <Col md="auto">
-                    <Button type="primary">낙찰하기</Button>
+                    <Button
+                        type="primary"
+                        onClick={() => updatePriceMutation.mutate()}
+                    >
+                        낙찰하기
+                    </Button>
                 </Col>
             </Row>
         </>
