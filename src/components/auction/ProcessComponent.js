@@ -2,11 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Button, Col, Form, Row, Image } from "react-bootstrap";
 import FormTextBox from "../common/FormTextBox";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { auctionGet, auctionUpdatePrice } from "../../api/auctionApi";
+import {
+    auctionCurrentPriceGet,
+    auctionGet,
+    auctionUpdatePrice,
+} from "../../api/auctionApi";
 import { API_SERVER_HOST } from "../../api/info";
 import FetchingModal from "../common/FetchingModal";
 import { KRW } from "./../common/CommonFunc";
 import useCustomSocket from "./../../hooks/useCustomSocket";
+import AnimatedNumber from "../common/AnimatedNumber";
+import { auctionTypeList } from "../common/TypeName";
 
 const itemState = {
     sequence: 0,
@@ -39,6 +45,12 @@ const ProcessComponent = ({ pno }) => {
     const [price, setPrice] = useState(0);
     const [participant, setParticipant] = useState(0);
     const [currentPrice, setCurrentPrice] = useState(0);
+    const [timeDifference, setTimeDifference] = useState("");
+    const [targetTime, setTargetTime] = useState(null);
+
+    useEffect(() => {
+        auctionCurrentPriceGet(pno).then((data) => setCurrentPrice(data));
+    }, []);
 
     const query = useQuery({
         queryKey: ["auction", pno],
@@ -77,8 +89,35 @@ const ProcessComponent = ({ pno }) => {
     const data = query.data || initState;
 
     useEffect(() => {
-        setCurrentPrice(data.price);
-    }, [data.price]);
+        if (!query.isSuccess) return;
+        console.log(data.endTime);
+        setTargetTime(new Date(data.endTime));
+    }, [data.endTime]);
+
+    useEffect(() => {
+        if (targetTime) {
+            const updateTimeDifference = () => {
+                const currentTime = new Date();
+                const diffInMilliseconds = targetTime - currentTime;
+                const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+                const hours = Math.floor(diffInSeconds / 3600);
+                const minutes = Math.floor((diffInSeconds % 3600) / 60);
+                const seconds = diffInSeconds % 60;
+
+                setTimeDifference(
+                    `${String(hours).padStart(2, "0")}:${String(
+                        minutes
+                    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+                );
+            };
+
+            updateTimeDifference(); // 초기 계산
+
+            const intervalId = setInterval(updateTimeDifference, 1000); // 1초마다 갱신
+
+            return () => clearInterval(intervalId);
+        }
+    }, [targetTime]);
 
     return (
         <>
@@ -106,8 +145,8 @@ const ProcessComponent = ({ pno }) => {
                     <br />
                     (Remain Time)
                 </Col>
-                <Col md="auto" style={{ fontSize: "70px" }}>
-                    05:22
+                <Col md="auto" style={{ fontSize: "60px" }}>
+                    {timeDifference}
                 </Col>
             </Row>
 
@@ -149,7 +188,7 @@ const ProcessComponent = ({ pno }) => {
                     <FormTextBox
                         name="경매 유형"
                         readOnly={true}
-                        value={data.auctionType}
+                        value={auctionTypeList[data.auctionType]}
                     />
                     <FormTextBox
                         name="경매 제목"
@@ -268,7 +307,12 @@ const ProcessComponent = ({ pno }) => {
                         textAlign: "center",
                     }}
                 >
-                    <span>{KRW(currentPrice)}</span>
+                    <span>
+                        <AnimatedNumber
+                            targetValue={currentPrice}
+                            duration={1000}
+                        />
+                    </span>
                 </Col>
             </Row>
             <Row
@@ -282,7 +326,7 @@ const ProcessComponent = ({ pno }) => {
             >
                 <Col md={6}>
                     <Form.Control
-                        type="text"
+                        type="number"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                     />
@@ -292,7 +336,7 @@ const ProcessComponent = ({ pno }) => {
                         type="primary"
                         onClick={() => updatePriceMutation.mutate()}
                     >
-                        낙찰하기
+                        직접 작성
                     </Button>
                 </Col>
             </Row>
