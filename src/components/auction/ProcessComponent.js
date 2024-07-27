@@ -38,7 +38,30 @@ const initState = {
     buyer: "",
     startTime: "",
     maxParticipantCount: 0,
+    priceUnit: 0,
 };
+
+const Circle = ({ color, value }) => (
+    <div
+        style={{
+            display: "flex",
+            justifyContent: "right",
+            alignItems: "center",
+            padding: "5px",
+        }}
+    >
+        <div
+            style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                backgroundColor: `${color}`,
+                marginRight: "10px",
+            }}
+        />
+        {value}
+    </div>
+);
 
 const ProcessComponent = ({ pno }) => {
     const { connect, disconnect } = useCustomSocket();
@@ -270,6 +293,16 @@ const ProcessComponent = ({ pno }) => {
                     />
                 </Col>
             </Row>
+            <div
+                style={{
+                    width: "100%",
+                    marginTop: "30px",
+                }}
+            >
+                <Circle value="시작 금액" color="green" />
+                <Circle value="다음 금액" color="orange" />
+                <Circle value="현재 금액" color="red" />
+            </div>
             <Row
                 style={{
                     marginTop: "40px",
@@ -295,9 +328,19 @@ const ProcessComponent = ({ pno }) => {
                         backgroundColor: "orange",
                         borderRadius: "50px",
                         textAlign: "center",
+                        cursor: "pointer",
+                    }}
+                    onClick={(e) => {
+                        setPrice(currentPrice + data.priceUnit);
+                        updatePriceMutation.mutate();
                     }}
                 >
-                    <span>{KRW(currentPrice + data.priceUnit)}</span>
+                    <span>
+                        <AnimatedNumber
+                            targetValue={currentPrice + data.priceUnit}
+                            duration={1000}
+                        />
+                    </span>
                 </Col>
                 <Col
                     style={{
@@ -336,7 +379,7 @@ const ProcessComponent = ({ pno }) => {
                         type="primary"
                         onClick={() => updatePriceMutation.mutate()}
                     >
-                        직접 작성
+                        금액 제출
                     </Button>
                 </Col>
             </Row>
