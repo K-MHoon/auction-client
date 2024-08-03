@@ -1,8 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import React, { useRef, useState } from "react";
 import { Button, Col, Form, Image, Modal, Row } from "react-bootstrap";
 import { itemGet } from "../../api/itemApi";
 import { API_SERVER_HOST } from "../../api/info";
+import { auctionAdd } from "../../api/auctionApi";
+import ResultModal from "../common/ResultModal";
+import { useNavigate } from "react-router-dom";
+import FetchingModal from "../common/FetchingModal";
 
 const textFormName = {
     fontSize: "20px",
@@ -39,7 +43,9 @@ const itemState = {
 
 const AddComponent = ({ ino }) => {
     const [auction, setAuction] = useState(initState);
+    const [show, setShow] = useState(false);
     const imageRef = useRef();
+    const navigate = useNavigate();
 
     const query = useQuery({
         queryKey: ["item", ino],
@@ -48,9 +54,29 @@ const AddComponent = ({ ino }) => {
         retry: 1,
     });
 
-    const data = query.data || itemState;
+    const addMutation = useMutation({
+        mutationFn: (auction) => auctionAdd(auction),
+    });
 
-    const [show, setShow] = useState(false);
+    const handleClickAdd = (e) => {
+        const images = imageRef.current.files;
+        const formData = new FormData();
+
+        for (let i = 0; i < images.length; i++) {
+            formData.append("images", images[i]);
+        }
+
+        formData.append("title", auction.title);
+        formData.append("minPrice", auction.minPrice);
+        formData.append("type", auction.type);
+        formData.append("startTime", auction.startTime);
+        formData.append("endTime", auction.endTime);
+        formData.append("description", auction.description);
+        formData.append("itemSeq", ino);
+
+        addMutation.mutate(formData);
+        setShow(false);
+    };
 
     const handleClose = () => setShow(false);
 
@@ -63,11 +89,29 @@ const AddComponent = ({ ino }) => {
         setAuction({ ...auction });
     };
 
+    const data = query.data || itemState;
+
+    const closeModal = () => {
+        if (addMutation.isSuccess) {
+            navigate({ pathname: "/my/auction/list" }, { replace: true });
+        }
+    };
+
+    console.log(auction);
+
     return (
         <>
+            <FetchingModal flag={addMutation.isPending} />
+            <ResultModal
+                flag={addMutation.isSuccess}
+                title={"처리 결과"}
+                content={"정상적으로 처리되었습니다."}
+                callbackFn={closeModal}
+            />
             <Row className="p-2 justify-content-md-center" style={textFormName}>
                 해당 물품을 경매에 등록합니다.
             </Row>
+
             <Row className="m-2 p-2 justify-content-md-center">
                 <Col
                     md={10}
@@ -242,9 +286,11 @@ const AddComponent = ({ ino }) => {
                 <Modal.Header closeButton>
                     <Modal.Title>확인</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>물품을 등록하시겠습니까?</Modal.Body>
+                <Modal.Body>
+                    경매를 시작하시겠습니까? (경매쿠폰이 차감됩니다.)
+                </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="primary" onClick={handleClose}>
+                    <Button variant="primary" onClick={handleClickAdd}>
                         예
                     </Button>
                     <Button variant="secondary" onClick={handleClose}>
