@@ -12,17 +12,7 @@ import {
 } from "react-bootstrap";
 import { auctionListGet } from "../../api/auctionApi";
 import { KRW } from "../common/CommonFunc";
-
-const itemTypeList = {
-    ALL: "전체",
-    ELECTRIC: "전자제품",
-    BOOK: "도서",
-    CLOTHES: "의류",
-    MEDICINE: "의약품",
-    FOOD: "음식",
-    TOY: "장난감",
-    ETC: "기타",
-};
+import { itemTypeList } from "../common/TypeName";
 
 const initState = {
     current: 0,
