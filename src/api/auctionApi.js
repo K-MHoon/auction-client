@@ -52,3 +52,15 @@ export const myAuctionListGet = async (param, page, size) => {
     );
     return res.data;
 };
+
+export const auctionCurrentPriceGet = async (auctionSeq) => {
+    const res = await jwtAxios.get(`${host}/auction/${auctionSeq}/price`);
+    return res.data;
+};
+
+export const auctionFinishPost = async (auctionSeq, status) => {
+    const res = await jwtAxios.post(`${host}/auction/${auctionSeq}/finish`, {
+        status,
+    });
+    return res.data;
+};
