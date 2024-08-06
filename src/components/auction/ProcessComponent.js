@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Form, Row, Image } from "react-bootstrap";
+import { Button, Col, Form, Row, Image, Modal } from "react-bootstrap";
 import FormTextBox from "../common/FormTextBox";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     auctionCurrentPriceGet,
+    auctionFinishPost,
     auctionGet,
     auctionUpdatePrice,
 } from "../../api/auctionApi";
@@ -13,6 +14,8 @@ import { KRW } from "./../common/CommonFunc";
 import useCustomSocket from "./../../hooks/useCustomSocket";
 import AnimatedNumber from "../common/AnimatedNumber";
 import { auctionTypeList } from "../common/TypeName";
+import { getCookie } from "../../util/cookieUtil";
+import { useNavigate } from "react-router-dom";
 
 const itemState = {
     sequence: 0,
@@ -70,6 +73,9 @@ const ProcessComponent = ({ pno }) => {
     const [currentPrice, setCurrentPrice] = useState(0);
     const [timeDifference, setTimeDifference] = useState("");
     const [targetTime, setTargetTime] = useState(null);
+    const [show, setShow] = useState(false);
+    const [modalContent, setModalContent] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
         auctionCurrentPriceGet(pno).then((data) => setCurrentPrice(data));
@@ -100,6 +106,12 @@ const ProcessComponent = ({ pno }) => {
         },
     };
 
+    const handleClose = () => {
+        auctionFinishPost(pno, modalContent);
+        navigate({ pathname: "/" }, { replace: true });
+        setShow(false);
+    };
+
     useEffect(() => {
         connect([participantFunc, updatePriceFunc]);
         return () => disconnect();
@@ -110,6 +122,7 @@ const ProcessComponent = ({ pno }) => {
     });
 
     const data = query.data || initState;
+    const isSeller = getCookie("member").email === data.seller.email;
 
     useEffect(() => {
         if (!query.isSuccess) return;
@@ -144,6 +157,26 @@ const ProcessComponent = ({ pno }) => {
 
     return (
         <>
+            <Modal show={show} onHide={() => setShow(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        {modalContent === "STOPPED" ? "중단" : "완료"}확인
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {modalContent === "STOPPED"
+                        ? "경매를 중단하시겠습니까? 중단하는 경우, 현재 경매중인 물품은 회수되며, 경매가 종료됩니다."
+                        : "경매를 완료하시겠습니까? 완료하는 경우, 현재 경매중인 물품은 현시점에 최대 가격을 부른 사용자에게 넘어가며, 경매가 종료됩니다."}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={handleClose}>
+                        예
+                    </Button>
+                    <Button variant="secondary" onClick={() => setShow(false)}>
+                        아니오
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <FetchingModal flag={query.isFetching} />
             <Row
                 className="fw-bold fs-3 position-absolute"
@@ -331,8 +364,10 @@ const ProcessComponent = ({ pno }) => {
                         cursor: "pointer",
                     }}
                     onClick={(e) => {
-                        setPrice(currentPrice + data.priceUnit);
-                        updatePriceMutation.mutate();
+                        if (!isSeller) {
+                            setPrice(currentPrice + data.priceUnit);
+                            updatePriceMutation.mutate();
+                        }
                     }}
                 >
                     <span>
@@ -358,31 +393,74 @@ const ProcessComponent = ({ pno }) => {
                     </span>
                 </Col>
             </Row>
-            <Row
-                className="justify-content-md-end"
-                style={{
-                    fontWeight: "bold",
-                    alignItems: "center",
-                    height: 100,
-                    margin: 10,
-                }}
-            >
-                <Col md={6}>
-                    <Form.Control
-                        type="number"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                    />
-                </Col>
-                <Col md="auto">
-                    <Button
-                        type="primary"
-                        onClick={() => updatePriceMutation.mutate()}
-                    >
-                        금액 제출
-                    </Button>
-                </Col>
-            </Row>
+            {isSeller ? (
+                <Row
+                    className="justify-content-md-end"
+                    style={{
+                        fontWeight: "bold",
+                        alignItems: "center",
+                        height: 100,
+                        margin: 10,
+                    }}
+                >
+                    <Col md="auto">
+                        <Button
+                            style={{
+                                width: "200px",
+                                height: "50px",
+                            }}
+                            variant="outline-danger"
+                            onClick={() => {
+                                setModalContent("STOPPED");
+                                setShow(true);
+                            }}
+                        >
+                            중단하기
+                        </Button>
+                    </Col>
+                    <Col md="auto">
+                        <Button
+                            style={{
+                                width: "200px",
+                                height: "50px",
+                            }}
+                            variant="outline-warning"
+                            onClick={() => {
+                                setModalContent("FINISHED");
+                                setShow(true);
+                            }}
+                        >
+                            현재 금액으로 끝내기
+                        </Button>
+                    </Col>
+                </Row>
+            ) : (
+                <Row
+                    className="justify-content-md-end"
+                    style={{
+                        fontWeight: "bold",
+                        alignItems: "center",
+                        height: 100,
+                        margin: 10,
+                    }}
+                >
+                    <Col md={6}>
+                        <Form.Control
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                        />
+                    </Col>
+                    <Col md="auto">
+                        <Button
+                            type="primary"
+                            onClick={() => updatePriceMutation.mutate()}
+                        >
+                            금액 제출
+                        </Button>
+                    </Col>
+                </Row>
+            )}
         </>
     );
 };
