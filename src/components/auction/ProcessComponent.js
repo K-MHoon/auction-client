@@ -66,11 +66,16 @@ const Circle = ({ color, value }) => (
     </div>
 );
 
+const auctionSocketValue = {
+    participant: 0,
+    currentPrice: 0,
+    status: "RUNNING",
+};
+
 const ProcessComponent = ({ pno }) => {
     const { connect, disconnect } = useCustomSocket();
     const [price, setPrice] = useState(0);
-    const [participant, setParticipant] = useState(0);
-    const [currentPrice, setCurrentPrice] = useState(0);
+    const [socketValue, setSocketValue] = useState(auctionSocketValue);
     const [timeDifference, setTimeDifference] = useState("");
     const [targetTime, setTargetTime] = useState(null);
     const [show, setShow] = useState(false);
@@ -78,7 +83,10 @@ const ProcessComponent = ({ pno }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        auctionCurrentPriceGet(pno).then((data) => setCurrentPrice(data));
+        auctionCurrentPriceGet(pno).then((data) => {
+            socketValue["currentPrice"] = data;
+            setSocketValue({ ...socketValue });
+        });
     }, []);
 
     const query = useQuery({
@@ -93,7 +101,8 @@ const ProcessComponent = ({ pno }) => {
         func: (callback) => {
             const jsonBody = JSON.parse(callback.body);
             console.log(jsonBody);
-            setParticipant(jsonBody.count);
+            socketValue["participant"] = jsonBody.count;
+            setSocketValue({ ...socketValue });
         },
     };
 
@@ -102,7 +111,18 @@ const ProcessComponent = ({ pno }) => {
         func: (callback) => {
             const jsonBody = JSON.parse(callback.body);
             console.log(jsonBody);
-            setCurrentPrice(jsonBody.price);
+            socketValue["currentPrice"] = jsonBody.price;
+            setSocketValue({ ...socketValue });
+        },
+    };
+
+    const updateStatusFunc = {
+        key: `/sub/auction/${pno}/status`,
+        func: (callback) => {
+            const jsonBody = JSON.parse(callback.body);
+            console.log(jsonBody);
+            socketValue["status"] = jsonBody.auctionStatus;
+            setSocketValue({ ...socketValue });
         },
     };
 
@@ -113,7 +133,7 @@ const ProcessComponent = ({ pno }) => {
     };
 
     useEffect(() => {
-        connect([participantFunc, updatePriceFunc]);
+        connect([participantFunc, updatePriceFunc, updateStatusFunc]);
         return () => disconnect();
     }, []);
 
@@ -155,6 +175,17 @@ const ProcessComponent = ({ pno }) => {
         }
     }, [targetTime]);
 
+    useEffect(() => {
+        if (
+            socketValue.status === "STOPPED" ||
+            socketValue.status === "FINISHED"
+        ) {
+            alert("판매자에 의해 경매가 종료되었습니다.");
+            navigate("/");
+            return;
+        }
+    }, [socketValue.status]);
+
     return (
         <>
             <Modal show={show} onHide={() => setShow(false)}>
@@ -182,7 +213,8 @@ const ProcessComponent = ({ pno }) => {
                 className="fw-bold fs-3 position-absolute"
                 style={{ marginTop: "-30px" }}
             >
-                현재 참가자 수 : {participant} / {data.maxParticipantCount}
+                현재 참가자 수 : {socketValue["participant"]} /{" "}
+                {data.maxParticipantCount}
             </Row>
             <Row
                 className="justify-content-md-end"
@@ -365,14 +397,18 @@ const ProcessComponent = ({ pno }) => {
                     }}
                     onClick={(e) => {
                         if (!isSeller) {
-                            setPrice(currentPrice + data.priceUnit);
+                            setPrice(
+                                socketValue["currentPrice"] + data.priceUnit
+                            );
                             updatePriceMutation.mutate();
                         }
                     }}
                 >
                     <span>
                         <AnimatedNumber
-                            targetValue={currentPrice + data.priceUnit}
+                            targetValue={
+                                socketValue["currentPrice"] + data.priceUnit
+                            }
                             duration={1000}
                         />
                     </span>
@@ -387,7 +423,7 @@ const ProcessComponent = ({ pno }) => {
                 >
                     <span>
                         <AnimatedNumber
-                            targetValue={currentPrice}
+                            targetValue={socketValue["currentPrice"]}
                             duration={1000}
                         />
                     </span>
