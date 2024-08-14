@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Form, Row, Image, Modal } from "react-bootstrap";
+import { Button, Col, Form, Row, Image, Modal, Table } from "react-bootstrap";
 import FormTextBox from "../common/FormTextBox";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -70,6 +70,12 @@ const auctionSocketValue = {
     participant: 0,
     currentPrice: 0,
     status: "RUNNING",
+    history: [
+        {
+            price: 0,
+            date: "",
+        },
+    ],
 };
 
 const ProcessComponent = ({ pno }) => {
@@ -126,6 +132,18 @@ const ProcessComponent = ({ pno }) => {
         },
     };
 
+    const updatePriceHistoryFunc = {
+        key: `/sub/auction/${pno}/price/user/${
+            getCookie("member").email
+        }/history`,
+        func: (callback) => {
+            const jsonBody = JSON.parse(callback.body);
+            console.log(jsonBody);
+            socketValue["history"] = jsonBody.priceHistoryList;
+            setSocketValue({ ...socketValue });
+        },
+    };
+
     const handleClose = () => {
         auctionFinishPost(pno, modalContent);
         navigate({ pathname: "/" }, { replace: true });
@@ -133,7 +151,12 @@ const ProcessComponent = ({ pno }) => {
     };
 
     useEffect(() => {
-        connect([participantFunc, updatePriceFunc, updateStatusFunc]);
+        connect([
+            participantFunc,
+            updatePriceFunc,
+            updateStatusFunc,
+            updatePriceHistoryFunc,
+        ]);
         return () => disconnect();
     }, []);
 
@@ -471,31 +494,66 @@ const ProcessComponent = ({ pno }) => {
                     </Col>
                 </Row>
             ) : (
-                <Row
-                    className="justify-content-md-end"
-                    style={{
-                        fontWeight: "bold",
-                        alignItems: "center",
-                        height: 100,
-                        margin: 10,
-                    }}
-                >
-                    <Col md={6}>
-                        <Form.Control
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                        />
-                    </Col>
-                    <Col md="auto">
-                        <Button
-                            type="primary"
-                            onClick={() => updatePriceMutation.mutate()}
+                <>
+                    <Row
+                        className="justify-content-md-end"
+                        style={{
+                            fontWeight: "bold",
+                            alignItems: "center",
+                            height: 100,
+                            margin: 10,
+                        }}
+                    >
+                        <Col md={6}>
+                            <Form.Control
+                                type="number"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                            />
+                        </Col>
+                        <Col md="auto">
+                            <Button
+                                type="primary"
+                                onClick={() => updatePriceMutation.mutate()}
+                            >
+                                금액 제출
+                            </Button>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Form.Label
+                            style={{
+                                textAlign: "center",
+                                marginBottom: 20,
+                                marginTop: 20,
+                                fontSize: "30px",
+                                fontWeight: "bold",
+                            }}
                         >
-                            금액 제출
-                        </Button>
-                    </Col>
-                </Row>
+                            제출 이력(History)
+                        </Form.Label>
+                    </Row>
+                    <Row>
+                        <Table style={{ textAlign: "center" }}>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>시간</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {socketValue["history"].map((d, idx) => (
+                                    <tr key={idx}>
+                                        <td>{idx + 1}</td>
+                                        <td>{d.date}</td>
+                                        <td>{d.price}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </Row>
+                </>
             )}
         </>
     );
