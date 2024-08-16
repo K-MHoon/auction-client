@@ -13,7 +13,7 @@ const items = [
         count: 10,
         price: 100000,
         image: {
-            width: "300spx",
+            width: "300px",
             height: "170px",
             src: shiba,
         },
@@ -23,7 +23,7 @@ const items = [
         count: 100,
         price: 900000,
         image: {
-            width: "300spx",
+            width: "300px",
             height: "170px",
             src: shiba,
         },
@@ -104,7 +104,7 @@ const CouponComponent = () => {
                     <Button variant="primary" onClick={handleClose}>
                         예
                     </Button>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <Button variant="secondary" onClick={() => setShow(false)}>
                         아니오
                     </Button>
                 </Modal.Footer>

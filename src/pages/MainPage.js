@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
 import BasicLayout from "../layouts/BasicLayout";
-import SearchBar from "../components/menus/SearchBar";
-import { Button, Row, Col } from "react-bootstrap";
 import AuctionSlider from "../components/menus/AuctionSlider";
 import useCustomLogin from "../hooks/useCustomLogin";
 import ListComponent from "../components/auction/ListComponent";
