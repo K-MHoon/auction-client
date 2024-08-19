@@ -85,22 +85,24 @@ const ProcessComponent = ({ pno }) => {
     const [timeDifference, setTimeDifference] = useState("");
     const [targetTime, setTargetTime] = useState(null);
     const [show, setShow] = useState(false);
-    const [modalContent, setModalContent] = useState({});
+    const [modalContent, setModalContent] = useState("RUNNING");
+    const [isSeller, setIsSeller] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        auctionCurrentPriceGet(pno).then((data) => {
-            socketValue["currentPrice"] = data;
-            setSocketValue({ ...socketValue });
-        });
-    }, []);
-
-    const query = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ["auction", pno],
         queryFn: () => auctionGet(pno),
         staleTime: 1000 * 10 * 60,
         retry: 1,
+        placeholderData: initState,
     });
+
+    useEffect(() => {
+        socketValue["currentPrice"] = data.price;
+        setSocketValue({ ...socketValue });
+        setTargetTime(new Date(data.endTime));
+        setIsSeller(getCookie("member").email === data.seller.email);
+    }, [data]);
 
     const participantFunc = {
         key: `/sub/auction/${pno}/participant`,
@@ -164,15 +166,6 @@ const ProcessComponent = ({ pno }) => {
         mutationFn: () => auctionUpdatePrice(pno, price),
     });
 
-    const data = query.data || initState;
-    const isSeller = getCookie("member").email === data.seller.email;
-
-    useEffect(() => {
-        if (!query.isSuccess) return;
-        console.log(data.endTime);
-        setTargetTime(new Date(data.endTime));
-    }, [data.endTime]);
-
     useEffect(() => {
         if (targetTime) {
             const updateTimeDifference = () => {
@@ -231,7 +224,7 @@ const ProcessComponent = ({ pno }) => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-            <FetchingModal flag={query.isFetching} />
+            <FetchingModal flag={isLoading} />
             <Row
                 className="fw-bold fs-3 position-absolute"
                 style={{ marginTop: "-30px" }}
