@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import "./AuctionSlider.css";
 import { useQuery } from "@tanstack/react-query";
@@ -7,24 +7,39 @@ import FetchingModal from "../common/FetchingModal";
 import { Card, Stack } from "react-bootstrap";
 import { API_SERVER_HOST } from "../../api/info";
 import { KRW } from "../common/CommonFunc";
+import useCustomSocket from "../../hooks/useCustomSocket";
+import AnimatedNumber from "../common/AnimatedNumber";
 
 const initState = {
     sequence: 0,
     title: "",
-    minPrice: "",
-    price: "",
+    minPrice: 0,
+    price: 0,
     auctionImageList: [{ fileName: "" }],
     seller: "",
     startTime: "",
 };
 
 const AuctionSlider = () => {
-    const query = useQuery({
+    const { connect, disconnect } = useCustomSocket();
+    const [currentPrice, setCurrentPrice] = useState([]);
+
+    const { data, isLoading, isFetched } = useQuery({
         queryKey: ["auctionSlider"],
         queryFn: () => auctionSliderListGet(),
         staleTime: 1000 * 10 * 60,
         retry: 1,
+        placeholderData: [initState],
     });
+
+    useEffect(() => {
+        if (!isFetched) return;
+        const updatedData = data.map((obj) => ({
+            auctionSeq: obj.sequence,
+            price: obj.price,
+        }));
+        setCurrentPrice([...updatedData]);
+    }, [data, isFetched]);
 
     const settings = {
         infinite: true,
@@ -55,11 +70,39 @@ const AuctionSlider = () => {
         ],
     };
 
-    const data = query.data || [initState];
+    const updateSliderPriceFunc = {
+        key: `/sub/auction/slider/price`,
+        func: (callback) => {
+            const jsonBody = JSON.parse(callback.body);
+            console.log(jsonBody);
+            setCurrentPrice((prev) =>
+                prev.map((obj) =>
+                    obj.auctionSeq === jsonBody.auctionSeq
+                        ? { ...obj, price: jsonBody.price }
+                        : obj
+                )
+            );
+        },
+    };
+
+    useEffect(() => {
+        connect([updateSliderPriceFunc]);
+        return () => disconnect();
+    }, []);
+
+    const getCurrentPrice = (auction) => {
+        const idx = currentPrice.findIndex(
+            (p) => p.auctionSeq === auction.sequence
+        );
+        if (idx === -1) {
+            return auction.price;
+        }
+        return currentPrice[idx].price;
+    };
 
     return (
         <>
-            <FetchingModal flag={query.isFetching} />
+            <FetchingModal flag={isLoading} />
             <Slider {...settings}>
                 {data.map((auction) => (
                     <Card key={auction.sequence} style={{ width: "250px" }}>
@@ -103,7 +146,12 @@ const AuctionSlider = () => {
                                             textAlign: "center",
                                         }}
                                     >
-                                        {KRW(auction.price)}
+                                        <AnimatedNumber
+                                            targetValue={getCurrentPrice(
+                                                auction
+                                            )}
+                                            duration={1000}
+                                        />
                                     </div>
                                 </Stack>
                             </Card.Text>
